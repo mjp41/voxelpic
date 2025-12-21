@@ -45,11 +45,11 @@ Python to build the test files. The `vpic` tool further requires `libpng` if you
 want to be able to read and write PNG images. Once you have the requirements in
 place, you can build as normal, for example:
 
-   mkdir build
-   cd build
-   cmake .. --preset release
-   cmake --build .
-   ctest
+    mkdir build
+    cd build
+    cmake .. --preset release
+    cmake --build .
+    ctest
 
 ## `vpic` tool
 
@@ -87,9 +87,15 @@ and are lost. `sample_cloud.dat` demonstrates the cloud data format, which is:
 ## `voxelpic` Python Library
 
 We also provide a Python interface via the `voxelpic` Python library. To install
-this library locally from the repository, run:
+this library, run:
 
-    pip install -e setup.py
+    pip install voxelpic
+
+to get the latest released version or:
+
+    pip install -e .
+
+to build the library directly from a clone of this repository.
 
 The library understands `numpy` arrays and can use them directly. To achieve the
 same functionality as the vpic library above, we could use the following Python
@@ -99,6 +105,7 @@ script:
 import cv2
 import voxelpic as vp
 
+# NB all variables below are numpy arrays
 sample_cloud = vp.PointCloud.load("sample_cloud.dat")
 image = vp.encode(sample_cloud, depth=7)
 image_bgr = cv2.cvtColor(image, cv2.COLOR_RGBA2BGRA)
