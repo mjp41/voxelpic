@@ -1,0 +1,16 @@
+get_filename_component(VOXELPIC_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+include(FetchContent)
+
+FetchContent_Declare(
+    libpng
+    GIT_REPOSITORY https://github.com/pnggroup/libpng.git
+    GIT_TAG v1.6.51
+)
+
+FetchContent_MakeAvailable(libnpg)
+
+if(NOT TARGET voxelpic::voxelpic)
+    include("${VOXELPIC_CMAKE_DIR}/voxelpicTargets.cmake")
+endif()
+
+set(VOXELPIC_lIBRARIES voxelpic::voxelpic)

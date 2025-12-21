@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm", "numpy"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "voxelpic"
+version = "0.1.0"
+authors = [
+    {name = "Matthew Johnson", email = "matjoh@microsoft.com"},
+]
+description = "voxelpic is a Python module which transcodes point clouds to and from images."
+readme = "README.md"
+requires-python = ">=3.8"
+keywords = ["voxel", "3D"]
+license = "MIT"
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "numpy"
+]
+
+[project.optional-dependencies]
+test = ["pytest-md", "pytest-emoji", "pytest-cov", "pytest"]

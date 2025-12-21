@@ -1,0 +1,30 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+#ifndef _VPIC_VERSION_H
+#define _VPIC_VERSION_H
+
+#define VPIC_VERSION_MAJOR @VOXELPIC_VERSION_MAJOR@
+#define VPIC_VERSION_MINOR @VOXELPIC_VERSION_MINOR@
+#define VPIC_VERSION_REVISION @VOXELPIC_VERSION_REVISION@
+#define VPIC_VERSION "@VOXELPIC_VERSION@"
+#define VPIC_GIT_HASH "@VPIC_GIT_HASH@"
+#define VPIC_BUILD_NAME "@VPIC_GIT_BRANCH@:@VPIC_GIT_SHORT_HASH@"
+#define VPIC_BUILD_DATE "@VPIC_BUILD_DATE@"
+#define VPIC_BUILD_TOOLCHAIN "@VPIC_BUILD_TOOLCHAIN@"
+#define VPIC_BUILD_INFO                                               \
+  (VPIC_VERSION " (" VPIC_BUILD_NAME ", " VPIC_BUILD_DATE \
+                ") " VPIC_BUILD_TOOLCHAIN " on " VPIC_PLATFORM)
+
+
+#if defined(_WIN32)
+#define VPIC_PLATFORM "windows"
+#elif defined(__APPLE__)
+#define VPIC_PLATFORM "macos"
+#elif defined(__linux__)
+#define VPIC_PLATFORM "linux"
+#else
+#define VPIC_PLATFORM "other"
+#endif
+
+#endif
