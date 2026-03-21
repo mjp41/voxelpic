@@ -13,6 +13,11 @@ target_link_libraries(image_test
   PRIVATE
   voxelpic::voxelpic)
 
+add_executable(api_test api_test.c)
+target_link_libraries(api_test
+  PRIVATE
+  voxelpic::voxelpic)
+
 
 add_test(NAME voxel_test_1 COMMAND voxel_test voxel_1.dat WORKING_DIRECTORY $<TARGET_FILE_DIR:voxel_test>)
 add_test(NAME voxel_test_2 COMMAND voxel_test voxel_2.dat WORKING_DIRECTORY $<TARGET_FILE_DIR:voxel_test>)
@@ -23,6 +28,7 @@ add_test(NAME color_test   COMMAND color_test              WORKING_DIRECTORY $<T
 add_test(NAME image_test_7 COMMAND image_test image_7.dat WORKING_DIRECTORY $<TARGET_FILE_DIR:image_test>)
 add_test(NAME image_test_8 COMMAND image_test image_8.dat WORKING_DIRECTORY $<TARGET_FILE_DIR:image_test>)
 add_test(NAME image_test_9 COMMAND image_test image_9.dat WORKING_DIRECTORY $<TARGET_FILE_DIR:image_test>)
+add_test(NAME api_test     COMMAND api_test                WORKING_DIRECTORY $<TARGET_FILE_DIR:api_test>)
 
 
 find_package(Python REQUIRED)

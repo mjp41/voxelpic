@@ -694,7 +694,7 @@ voxelpicEnum voxelpicColorToValue(const voxelpicColor *colors, voxelpicInt min,
 voxelpicEnum voxelpicLevelImageSize(const voxelpicLevel *level_opaque,
                                     size_t *width, size_t *height) {
   Level *level = (Level *)level_opaque;
-  if (level->depth < 6) {
+  if (level->depth < 7) {
     return VPIC_INVALID_LEVEL;
   }
 
@@ -1142,7 +1142,7 @@ voxelpicEnum voxelpicLevelDecode(const voxelpicImage *image,
 
   Voxel *write_ptr = level->voxels;
   Voxel *read_ptr = level->voxels + 1;
-  for (size_t i = 0; i < level->size; ++i, ++read_ptr) {
+  for (size_t i = 1; i < level->size; ++i, ++read_ptr) {
     if (read_ptr->index == write_ptr->index) {
       continue;
     }
@@ -1151,7 +1151,7 @@ voxelpicEnum voxelpicLevelDecode(const voxelpicImage *image,
     *write_ptr = *read_ptr;
   }
 
-  level->size = write_ptr - level->voxels;
+  level->size = write_ptr - level->voxels + 1;
   return ret;
 }
 
@@ -1407,7 +1407,7 @@ cleanup:
 
 voxelpicEnum voxelpicDepthImageSize(size_t depth, size_t *width,
                                     size_t *height) {
-  if (depth < 6) {
+  if (depth < 7) {
     return VPIC_INVALID_LEVEL;
   }
 

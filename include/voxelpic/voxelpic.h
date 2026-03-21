@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#define VOXELPIC_VERSION "0.1.0"
+#define VOXELPIC_VERSION "0.2.0"
 
 /// @brief 4D vector type
 typedef union voxelpic_vec4_s {

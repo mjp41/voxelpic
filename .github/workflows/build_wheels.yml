@@ -12,7 +12,7 @@ jobs:
         python: [cp310, cp311, cp312, cp313]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Git config for fetching pull requests
         run: |
@@ -25,7 +25,7 @@ jobs:
         with:
           package-dir: ${{github.workspace}}
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: wheels-${{ matrix.python }}-windows
           path: ./wheelhouse/*.whl
@@ -37,7 +37,7 @@ jobs:
         python: [cp310, cp311, cp312, cp313]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-python@v5
         id: python
@@ -61,7 +61,7 @@ jobs:
         with:
           package-dir: ${{github.workspace}}
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: wheels-${{ matrix.python }}-mac-arm64
           path: ./wheelhouse/*.whl
@@ -73,7 +73,7 @@ jobs:
         python: [cp310, cp311, cp312, cp313]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-python@v5
         id: python
@@ -98,7 +98,7 @@ jobs:
         with:
           package-dir: ${{github.workspace}}
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: wheels-${{ matrix.python }}-mac-x86_64
           path: ./wheelhouse/*.whl
@@ -110,7 +110,7 @@ jobs:
         python: [cp310, cp311, cp312, cp313]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Git config for fetching pull requests
         run: |
@@ -124,7 +124,7 @@ jobs:
         with:
           package-dir: ${{github.workspace}}
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: wheels-${{ matrix.python }}-manylinux
           path: ./wheelhouse/*.whl
@@ -137,7 +137,7 @@ jobs:
         python: [cp310, cp311, cp312, cp313]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Git config for fetching pull requests
         run: |
@@ -150,7 +150,7 @@ jobs:
         with:
           package-dir: ${{github.workspace}}
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: wheels-${{ matrix.python }}-musllinux
           path: ./wheelhouse/*.whl
@@ -165,13 +165,13 @@ jobs:
       runs-on: ubuntu-latest
       steps:
       - name: Download Wheels
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: wheelhouse
           pattern: wheels-*
           merge-multiple: true
       - run: ls -R wheelhouse
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: wheels
           path: ./wheelhouse/*

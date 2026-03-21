@@ -57,8 +57,8 @@ class PointCloud(NamedTuple("PointCloud", [("positions", np.ndarray), ("colors",
         size = len(self.positions)
         positions = np.empty((size, 4), np.float32)
         colors = np.empty((size, 4), np.uint8)
-        positions[:, 3] = self.positions
-        positions[3] = 1
+        positions[:, :3] = self.positions
+        positions[:, 3] = 1
         colors[:, :3] = self.colors
         colors[:, 3] = 255
         return PointCloud(positions, colors)

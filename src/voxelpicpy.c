@@ -313,7 +313,7 @@ static PyObject *decode(PyObject *module, PyObject *args) {
   }
 
   voxelpicPointCloud cloud;
-  cloud.capacity = count;
+  cloud.capacity = (size_t)PyArray_DIM(positions_array, 0);
   cloud.size = count;
   cloud.positions = (voxelpicVec4 *)PyArray_DATA(positions_array);
   cloud.colors = (voxelpicColor *)PyArray_DATA(colors_array);

@@ -1,0 +1,120 @@
+# VoxelPic
+
+## Purpose
+
+VoxelPic is a C library (with Python bindings) that transcodes 3D colored point
+clouds to and from 2D RGB images. It works by building an OcTree from a point
+cloud, rendering the OcTree from four orthographic views, and encoding voxel
+color and depth into image pixels. Depth is encoded as color using a modified
+version of the hue-codec scheme (limiting to 1273 central values for robustness
+to h.264 compression artifacts). Decoding reverses this process, reconstructing
+voxel centroids and colors from the image. Interior voxels occluded from all
+four views are lost during encoding.
+
+## Repository Layout
+
+```
+include/voxelpic/voxelpic.h   Public C API header
+src/voxelpic.c                Core library implementation (OcTree, encode/decode, hue-codec)
+src/voxelpicpy.c              CPython extension module (_voxelpic) using NumPy C API
+src/voxelpic.py               Python wrapper module (PointCloud, encode, decode, DecodeResult)
+src/__init__.py               Python package entry point
+tools/vpic.c                  CLI tool for building, encoding, and decoding voxelpics
+tools/cloud_gen.py            Generates sample point cloud data
+tools/show_cloud.py           Visualises point clouds (requires scenepic)
+tools/show_level.py           Visualises OcTree levels (requires scenepic)
+test/                         C tests (voxel_test, color_test, image_test) and Python tests
+cmake/                        CMake package config template
+docs/                         Documentation assets
+.github/workflows/            CI: pr_gate.yml (lint + build + test), build_wheels.yml
+```
+
+## Build System
+
+The project uses CMake (minimum 3.15) with C11. The version is read from the
+`VERSION` file at the project root.
+
+### CMake Presets (CMakePresets.json)
+
+| Preset          | Generator | Compiler | Tests | Tools |
+|-----------------|-----------|----------|-------|-------|
+| debug           | default   | default  | ON    | OFF   |
+| debug-clang     | Ninja     | clang    | ON    | OFF   |
+| release         | default   | default  | ON    | ON    |
+| release-clang   | Ninja     | clang    | ON    | ON    |
+
+### CMake Options
+
+- `VOXELPIC_BUILD_TESTS` — build C test executables (default OFF)
+- `VOXELPIC_BUILD_TOOLS` — build the `vpic` CLI tool (default OFF)
+- `VOXELPIC_BUILD_SHARED` — build a shared library in addition to static (default OFF)
+- `VOXELPIC_SANITIZE` — sanitizer flag, e.g. `address` (default empty)
+
+### Typical Build
+
+```sh
+cmake -B build --preset release
+cmake --build build
+ctest --test-dir build
+```
+
+### Dependencies (fetched automatically via FetchContent)
+
+- **cargs** (v1.2.0) — CLI argument parsing for the `vpic` tool
+- **libpng** (optional) — PNG I/O for the `vpic` tool; detected via `find_package`
+
+### Code Formatting
+
+`clang-format-18` is used. A `voxelpic_format` CMake target applies formatting
+to all `.c` and `.h` files in `src/`, `test/`, and `include/`.
+
+## Python Package
+
+Installable via `pip install -e .[test]`. Defined in `pyproject.toml` and
+`setup.py`. The C extension `_voxelpic` is built from `src/voxelpicpy.c` and
+`src/voxelpic.c`, linked against NumPy headers.
+
+### Python API (src/voxelpic.py)
+
+- `PointCloud` — NamedTuple of positions (Nx4 float32) and colors (Nx4 uint8)
+- `encode(cloud, depth=9)` → RGBA image as numpy ndarray
+- `decode(image)` → `DecodeResult` (positions, colors, count, depth)
+- `image_shape(depth)` → (height, width)
+- `voxel_size(depth)` → float
+
+### Python Tests
+
+Run with `pytest -vv` from the repo root (requires the `[test]` extra).
+
+## C API Conventions
+
+- All public symbols are prefixed with `voxelpic` (types) or `VPIC_` (macros).
+- Functions return `voxelpicEnum` error codes (`VPIC_OK` on success).
+- Opaque types `voxelpicOcTree` and `voxelpicLevel` are created with `*New()`
+  and freed with `*Free()`.
+- Levels obtained via `voxelpicOcTreeLevel()` are borrowed references owned by
+  the octree — do not free them.
+- SIMD-aligned allocation (`aligned_alloc` / `_aligned_malloc`) is used for
+  position and color arrays.
+
+## CI
+
+- **pr_gate.yml** — runs on pull requests to `main`:
+  clang-format check, builds and tests on Ubuntu 22.04, Ubuntu latest,
+  Ubuntu ASAN (clang), Windows, macOS ARM64, plus Python builds/tests on
+  each platform for Python 3.11–3.14.
+- **build_wheels.yml** — builds Python wheel artifacts.
+
+## Coding Guidelines
+
+- C11 standard. Compile with `-Wall` on non-MSVC.
+- Keep the public API in `include/voxelpic/voxelpic.h`; implementation details
+  stay in `src/voxelpic.c`.
+- Use `VPIC_API(return_type)` macro for all public function declarations to
+  support DLL export on Windows.
+- Error handling: return `voxelpicEnum` codes; use `voxelpicError()` to get
+  human-readable strings.
+- Python bindings: validate array dimensions and types at the boundary in
+  `voxelpicpy.c`; raise Python exceptions on error.
+- Test data for C tests is generated by Python scripts (`voxel_test_gen.py`,
+  `image_test_gen.py`) as a post-build step.
