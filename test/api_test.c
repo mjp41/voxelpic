@@ -366,11 +366,11 @@ static int write_test_file(const char *path, const unsigned char *data,
     return 1;
   }
 
-  int result = fwrite(data, size, 1, file) != 1;
+  int result = size > 0 && fwrite(data, 1, size, file) != size;
   return fclose(file) != 0 || result;
 }
 
-static int test_level_load_rejects_invalid_headers(void) {
+static int test_level_load_rejects_malformed_files(void) {
   int result = 0;
   const char *path = "invalid_level_header.dat";
   voxelpicLevel *level = voxelpicLevelNew(0);
@@ -378,49 +378,116 @@ static int test_level_load_rejects_invalid_headers(void) {
     FAIL("LevelNew failed");
   }
 
+  const unsigned char partial_depth[] = {0, 0, 0};
+  const unsigned char missing_count[] = {0, 0, 0, 7};
+  const unsigned char partial_count[] = {0, 0, 0, 7, 0, 0, 0};
+  const unsigned char minimum_invalid_size[] = {0, 0, 0, 7, 0x80, 0, 0, 0};
   const unsigned char negative_size[] = {0, 0, 0, 7, 0xff, 0xff, 0xff, 0xff};
-  if (write_test_file(path, negative_size, sizeof(negative_size))) {
-    FAIL("Failed to write negative-size level file");
-  }
-
-  voxelpicEnum rc = voxelpicLevelLoad(path, level);
-  if (rc != VPIC_IO_ERROR) {
-    FAIL("LevelLoad negative size: expected VPIC_IO_ERROR, got %d", rc);
-  }
-
+  const unsigned char missing_position[] = {0, 0, 0, 7, 0, 0, 0, 1};
+  const unsigned char partial_position[] = {0, 0, 0, 7, 0, 0, 0,
+                                            1, 0, 0, 0, 0, 0};
+  const unsigned char partial_color[] = {0, 0, 0, 7, 0, 0, 0, 1,
+                                         0, 0, 0, 0, 0, 0, 1, 2};
+  const unsigned char valid_min_depth[] = {0, 0, 0, 0, 0, 0, 0, 0};
+  const unsigned char valid_max_depth[] = {0, 0, 0, 14, 0, 0, 0, 0};
   const unsigned char invalid_depth[] = {0, 0, 0, 15};
-  if (write_test_file(path, invalid_depth, sizeof(invalid_depth))) {
-    FAIL("Failed to write invalid-depth level file");
-  }
+  const unsigned char oversized_depth[] = {0, 0, 0, 32};
+  struct {
+    const char *name;
+    const unsigned char *data;
+    size_t size;
+    voxelpicEnum expected;
+  } cases[] = {
+      {"empty", NULL, 0, VPIC_IO_ERROR},
+      {"partial depth", partial_depth, sizeof(partial_depth), VPIC_IO_ERROR},
+      {"missing count", missing_count, sizeof(missing_count), VPIC_IO_ERROR},
+      {"partial count", partial_count, sizeof(partial_count), VPIC_IO_ERROR},
+      {"minimum invalid size", minimum_invalid_size,
+       sizeof(minimum_invalid_size), VPIC_IO_ERROR},
+      {"negative size", negative_size, sizeof(negative_size), VPIC_IO_ERROR},
+      {"missing position", missing_position, sizeof(missing_position),
+       VPIC_IO_ERROR},
+      {"partial position", partial_position, sizeof(partial_position),
+       VPIC_IO_ERROR},
+      {"partial color", partial_color, sizeof(partial_color), VPIC_IO_ERROR},
+      {"minimum depth", valid_min_depth, sizeof(valid_min_depth), VPIC_OK},
+      {"maximum depth", valid_max_depth, sizeof(valid_max_depth), VPIC_OK},
+      {"invalid depth", invalid_depth, sizeof(invalid_depth),
+       VPIC_INVALID_LEVEL},
+      {"oversized depth", oversized_depth, sizeof(oversized_depth),
+       VPIC_INVALID_LEVEL},
+  };
 
-  rc = voxelpicLevelLoad(path, level);
-  if (rc != VPIC_INVALID_LEVEL) {
-    FAIL("LevelLoad invalid depth: expected VPIC_INVALID_LEVEL, got %d", rc);
+  size_t num_cases = sizeof(cases) / sizeof(cases[0]);
+  for (size_t i = 0; i < num_cases; ++i) {
+    if (write_test_file(path, cases[i].data, cases[i].size)) {
+      FAIL("Failed to write %s level file", cases[i].name);
+    }
+
+    voxelpicEnum rc = voxelpicLevelLoad(path, level);
+    if (rc != cases[i].expected) {
+      FAIL("LevelLoad %s: expected %d, got %d", cases[i].name,
+           cases[i].expected, rc);
+    }
   }
 
 end:
   remove(path);
-  voxelpicLevelFree(level);
+  if (level != NULL) {
+    voxelpicLevelFree(level);
+  }
   return result;
 }
 
-static int test_cloud_load_rejects_invalid_count(void) {
+static int test_cloud_load_rejects_malformed_files(void) {
   int result = 0;
   const char *path = "invalid_cloud_header.dat";
+  const unsigned char partial_count[] = {0, 0, 0};
+  const unsigned char empty_cloud[] = {0, 0, 0, 0};
+  const unsigned char minimum_invalid_size[] = {0x80, 0, 0, 0};
   const unsigned char negative_size[] = {0xff, 0xff, 0xff, 0xff};
-  if (write_test_file(path, negative_size, sizeof(negative_size))) {
-    FAIL("Failed to write negative-size cloud file");
-  }
+  const unsigned char missing_position[] = {0, 0, 0, 1};
+  const unsigned char partial_position[] = {0, 0, 0, 1, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0};
+  const unsigned char partial_color[] = {0, 0, 0, 1, 0, 0, 0, 0, 0,
+                                         0, 0, 0, 0, 0, 0, 1, 2};
+  struct {
+    const char *name;
+    const unsigned char *data;
+    size_t size;
+    voxelpicEnum expected;
+  } cases[] = {
+      {"empty", NULL, 0, VPIC_IO_ERROR},
+      {"partial count", partial_count, sizeof(partial_count), VPIC_IO_ERROR},
+      {"empty cloud", empty_cloud, sizeof(empty_cloud), VPIC_OK},
+      {"minimum invalid size", minimum_invalid_size,
+       sizeof(minimum_invalid_size), VPIC_IO_ERROR},
+      {"negative size", negative_size, sizeof(negative_size), VPIC_IO_ERROR},
+      {"missing position", missing_position, sizeof(missing_position),
+       VPIC_IO_ERROR},
+      {"partial position", partial_position, sizeof(partial_position),
+       VPIC_IO_ERROR},
+      {"partial color", partial_color, sizeof(partial_color), VPIC_IO_ERROR},
+  };
 
   voxelpicPointCloud *cloud = voxelpicPointCloudNew(0);
   if (cloud == NULL) {
     FAIL("PointCloudNew failed");
   }
 
-  voxelpicEnum rc = voxelpicPointCloudLoad(path, cloud);
-  if (rc != VPIC_IO_ERROR) {
-    voxelpicPointCloudFree(cloud);
-    FAIL("PointCloudLoad negative size: expected VPIC_IO_ERROR, got %d", rc);
+  size_t num_cases = sizeof(cases) / sizeof(cases[0]);
+  for (size_t i = 0; i < num_cases; ++i) {
+    if (write_test_file(path, cases[i].data, cases[i].size)) {
+      voxelpicPointCloudFree(cloud);
+      FAIL("Failed to write %s cloud file", cases[i].name);
+    }
+
+    voxelpicEnum rc = voxelpicPointCloudLoad(path, cloud);
+    if (rc != cases[i].expected) {
+      voxelpicPointCloudFree(cloud);
+      FAIL("PointCloudLoad %s: expected %d, got %d", cases[i].name,
+           cases[i].expected, rc);
+    }
   }
 
   voxelpicPointCloudFree(cloud);
@@ -430,20 +497,47 @@ end:
   return result;
 }
 
-static int test_load_rejects_bad_pointers(void) {
+static int test_load_rejects_invalid_arguments(void) {
   int result = 0;
+  const char *path = "missing_loader_input.dat";
+  voxelpicLevel *level = NULL;
+  voxelpicPointCloud *cloud = NULL;
 
-  voxelpicEnum rc = voxelpicLevelLoad("does_not_exist.dat", NULL);
+  remove(path);
+
+  voxelpicEnum rc = voxelpicLevelLoad(path, NULL);
   if (rc != VPIC_BAD_POINTER) {
     FAIL("LevelLoad NULL: expected VPIC_BAD_POINTER, got %d", rc);
   }
 
-  rc = voxelpicPointCloudLoad("does_not_exist.dat", NULL);
+  rc = voxelpicPointCloudLoad(path, NULL);
   if (rc != VPIC_BAD_POINTER) {
     FAIL("PointCloudLoad NULL: expected VPIC_BAD_POINTER, got %d", rc);
   }
 
+  level = voxelpicLevelNew(0);
+  cloud = voxelpicPointCloudNew(0);
+  if (level == NULL || cloud == NULL) {
+    FAIL("Loader argument allocation failed");
+  }
+
+  rc = voxelpicLevelLoad(path, level);
+  if (rc != VPIC_IO_ERROR) {
+    FAIL("LevelLoad missing file: expected VPIC_IO_ERROR, got %d", rc);
+  }
+
+  rc = voxelpicPointCloudLoad(path, cloud);
+  if (rc != VPIC_IO_ERROR) {
+    FAIL("PointCloudLoad missing file: expected VPIC_IO_ERROR, got %d", rc);
+  }
+
 end:
+  if (level != NULL) {
+    voxelpicLevelFree(level);
+  }
+  if (cloud != NULL) {
+    voxelpicPointCloudFree(cloud);
+  }
   return result;
 }
 
@@ -460,11 +554,11 @@ int main(void) {
       {"depth_voxel_size", test_depth_voxel_size},
       {"error_strings", test_error_strings},
       {"level_to_cloud_truncate", test_level_to_cloud_truncate},
-      {"level_load_rejects_invalid_headers",
-       test_level_load_rejects_invalid_headers},
-      {"cloud_load_rejects_invalid_count",
-       test_cloud_load_rejects_invalid_count},
-      {"load_rejects_bad_pointers", test_load_rejects_bad_pointers},
+      {"level_load_rejects_malformed_files",
+       test_level_load_rejects_malformed_files},
+      {"cloud_load_rejects_malformed_files",
+       test_cloud_load_rejects_malformed_files},
+      {"load_rejects_invalid_arguments", test_load_rejects_invalid_arguments},
   };
   size_t num_tests = sizeof(tests) / sizeof(tests[0]);
   int failures = 0;
