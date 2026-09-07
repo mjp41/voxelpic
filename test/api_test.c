@@ -53,6 +53,27 @@ end:
   return result;
 }
 
+static int test_pointcloud_new_capacity(void) {
+  int result = 0;
+  voxelpicPointCloud *cloud = voxelpicPointCloudNew(3);
+  if (cloud == NULL) {
+    FAIL("PointCloudNew returned NULL");
+  }
+  if (cloud->capacity != 3 || cloud->size != 0) {
+    FAIL("PointCloudNew: expected capacity 3 and size 0, got %zu and %zu",
+         cloud->capacity, cloud->size);
+  }
+  if (cloud->positions == NULL || cloud->colors == NULL) {
+    FAIL("PointCloudNew: nonzero capacity requires allocated buffers");
+  }
+
+end:
+  if (cloud != NULL) {
+    voxelpicPointCloudFree(cloud);
+  }
+  return result;
+}
+
 static int test_octree_queries(void) {
   int result = 0;
   voxelpicOcTree *octree = voxelpicOcTreeNew(3, 9);
@@ -432,6 +453,7 @@ int main(void) {
     int (*func)(void);
   } tests[] = {
       {"vec4_compare", test_vec4_compare},
+      {"pointcloud_new_capacity", test_pointcloud_new_capacity},
       {"octree_queries", test_octree_queries},
       {"level_queries", test_level_queries},
       {"depth_image_size", test_depth_image_size},

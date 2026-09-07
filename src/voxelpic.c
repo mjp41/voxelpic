@@ -150,7 +150,7 @@ voxelpicPointCloud *voxelpicPointCloudNew(size_t capacity) {
     return NULL;
   }
 
-  cloud->capacity = capacity;
+  cloud->capacity = 0;
   cloud->size = 0;
   cloud->positions = NULL;
   cloud->colors = NULL;
