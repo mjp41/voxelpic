@@ -19,15 +19,15 @@ target_link_libraries(api_test
   voxelpic::voxelpic)
 
 
-add_test(NAME voxel_test_1 COMMAND voxel_test voxel_1.dat WORKING_DIRECTORY $<TARGET_FILE_DIR:voxel_test>)
-add_test(NAME voxel_test_2 COMMAND voxel_test voxel_2.dat WORKING_DIRECTORY $<TARGET_FILE_DIR:voxel_test>)
-add_test(NAME voxel_test_3 COMMAND voxel_test voxel_3.dat WORKING_DIRECTORY $<TARGET_FILE_DIR:voxel_test>)
-add_test(NAME voxel_test_4 COMMAND voxel_test voxel_4.dat WORKING_DIRECTORY $<TARGET_FILE_DIR:voxel_test>)
-add_test(NAME voxel_test_5 COMMAND voxel_test voxel_5.dat WORKING_DIRECTORY $<TARGET_FILE_DIR:voxel_test>)
+add_test(NAME voxel_test_1 COMMAND voxel_test 1 voxel_1_input.dat voxel_1_expected.dat WORKING_DIRECTORY $<TARGET_FILE_DIR:voxel_test>)
+add_test(NAME voxel_test_2 COMMAND voxel_test 2 voxel_2_input.dat voxel_2_expected.dat WORKING_DIRECTORY $<TARGET_FILE_DIR:voxel_test>)
+add_test(NAME voxel_test_3 COMMAND voxel_test 3 voxel_3_input.dat voxel_3_expected.dat WORKING_DIRECTORY $<TARGET_FILE_DIR:voxel_test>)
+add_test(NAME voxel_test_4 COMMAND voxel_test 4 voxel_4_input.dat voxel_4_expected.dat WORKING_DIRECTORY $<TARGET_FILE_DIR:voxel_test>)
+add_test(NAME voxel_test_5 COMMAND voxel_test 5 voxel_5_input.dat voxel_5_expected.dat WORKING_DIRECTORY $<TARGET_FILE_DIR:voxel_test>)
 add_test(NAME color_test   COMMAND color_test              WORKING_DIRECTORY $<TARGET_FILE_DIR:color_test>)
-add_test(NAME image_test_7 COMMAND image_test image_7.dat WORKING_DIRECTORY $<TARGET_FILE_DIR:image_test>)
-add_test(NAME image_test_8 COMMAND image_test image_8.dat WORKING_DIRECTORY $<TARGET_FILE_DIR:image_test>)
-add_test(NAME image_test_9 COMMAND image_test image_9.dat WORKING_DIRECTORY $<TARGET_FILE_DIR:image_test>)
+add_test(NAME image_test_7 COMMAND image_test 7 image_7_cloud.dat WORKING_DIRECTORY $<TARGET_FILE_DIR:image_test>)
+add_test(NAME image_test_8 COMMAND image_test 8 image_8_cloud.dat WORKING_DIRECTORY $<TARGET_FILE_DIR:image_test>)
+add_test(NAME image_test_9 COMMAND image_test 9 image_9_cloud.dat WORKING_DIRECTORY $<TARGET_FILE_DIR:image_test>)
 add_test(NAME api_test     COMMAND api_test                WORKING_DIRECTORY $<TARGET_FILE_DIR:api_test>)
 
 

@@ -10,9 +10,9 @@ There are three C test executables under `test/`, each registered with CTest:
 
 | Executable   | Tests                        | Data Files              |
 |--------------|------------------------------|-------------------------|
-| `voxel_test` | OcTree build round-trip      | `voxel_1.dat`–`voxel_5.dat` |
+| `voxel_test` | OcTree build round-trip      | `voxel_*_input.dat`, `voxel_*_expected.dat` |
 | `color_test` | Hue-codec encode/decode      | *(none — self-contained)* |
-| `image_test` | Level encode/decode to image | `image_7.dat`–`image_9.dat` |
+| `image_test` | Level encode/decode to image | `image_7_cloud.dat`–`image_9_cloud.dat` |
 
 ## Building and Running
 
@@ -49,10 +49,9 @@ the output file already exists. Delete the `.dat` files to force regeneration.
 
 ### Binary Data Format
 
-All test data files follow the same layout:
+Generated fixtures use the public point-cloud file format:
 
 ```
-[int32 big-endian]   octree level
 [int32 big-endian]   number of points/voxels (N)
   repeated N times:
     [float32 native]  x
@@ -63,10 +62,9 @@ All test data files follow the same layout:
     [uint8]           b
 ```
 
-`voxel_test` data files additionally contain an expected-output section after
-the input section with the same `[count][positions+colors]` layout.
-
-Read big-endian header integers with the `read_be()` helper from `test/test.h`.
+  The test depth is passed as a separate command-line argument. Tests load each
+  fixture through `voxelpicPointCloudLoad()` so they do not duplicate the
+  production file parser.
 
 ## Conventions for Writing a New C Test
 

@@ -101,7 +101,7 @@ def generate_point_cloud(path: str, level: int, max_voxels: int):
     voxels = list(sorted(voxels))
 
     with open(path, "wb") as file:
-        file.write(struct.pack(">ii", level, len(voxels)))
+        file.write(struct.pack(">i", len(voxels)))
         for v in voxels:
             p = v.to_vec(side)
             c = Color.random()
@@ -122,7 +122,7 @@ if __name__ == "__main__":
         os.makedirs(args.output_dir)
 
     for level in range(args.min_depth, args.max_depth + 1):
-        path = os.path.join(args.output_dir, f"image_{level}.dat")
+        path = os.path.join(args.output_dir, f"image_{level}_cloud.dat")
         if os.path.exists(path):
             print(path, "exists, skipping")
             continue

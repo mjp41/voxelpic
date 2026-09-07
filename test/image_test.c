@@ -1,77 +1,34 @@
 #include "stdio.h"
+#include "stdlib.h"
 
-#include "test.h"
 #include "voxelpic/voxelpic.h"
 
-int read_test_file(const char *path, size_t *level,
-                   voxelpicPointCloud **input) {
-  FILE *fp;
-  int rc = 0;
-
-  fp = fopen(path, "rb");
-  if (fp == NULL) {
-    perror("Error opening test file");
+int main(int argc, char *argv[]) {
+  if (argc != 3) {
+    printf("Usage: image_test <level> <input>\n");
     return 1;
   }
 
-  int_least32_t value;
-
-  if (read_be(&value, fp) < 1) {
-    goto file_error;
-  }
-
-  *level = (size_t)value;
-
-  if (read_be(&value, fp) < 1) {
-    goto file_error;
-  }
-
-  size_t num_positions = (size_t)value;
-
-  voxelpicPointCloud *cloud = voxelpicPointCloudNew((size_t)num_positions);
-  if (cloud == NULL) {
-    return VPIC_OUT_OF_MEMORY;
-  }
-
-  *input = cloud;
-  cloud->size = num_positions;
-  voxelpicVec4 *pos_ptr = cloud->positions;
-  voxelpicColor *clr_ptr = cloud->colors;
-  for (size_t i = 0; i < num_positions; ++i, ++pos_ptr, ++clr_ptr) {
-    pos_ptr->w = 1;
-    clr_ptr->a = 255;
-    if (fread(pos_ptr, sizeof(pos_ptr->x), 3, fp) < 3) {
-      goto file_error;
-    }
-
-    if (fread(clr_ptr, sizeof(clr_ptr->r), 3, fp) < 3) {
-      goto file_error;
-    }
-  }
-
-  goto cleanup;
-
-file_error:
-  if (*input != NULL) {
-    voxelpicPointCloudFree(*input);
-    *input = NULL;
-  }
-
-  perror("Error reading from test file");
-  rc = 1;
-
-cleanup:
-  fclose(fp);
-  return rc;
-}
-
-int main(int argc, char *argv[]) {
   voxelpicEnum ret;
-  size_t level_index;
-  voxelpicPointCloud *expected;
-  read_test_file(argv[1], &level_index, &expected);
+  size_t level_index = (size_t)strtoul(argv[1], NULL, 10);
+  voxelpicPointCloud *expected = NULL;
+  voxelpicOcTree *octree = NULL;
+  voxelpicImage *image = NULL;
+  voxelpicLevel *output_level = NULL;
+  voxelpicPointCloud *actual = NULL;
 
-  voxelpicOcTree *octree = voxelpicOcTreeNew(4, level_index);
+  expected = voxelpicPointCloudNew(0);
+  if (expected == NULL) {
+    ret = VPIC_OUT_OF_MEMORY;
+    goto error;
+  }
+
+  ret = voxelpicPointCloudLoad(argv[2], expected);
+  if (ret) {
+    goto error;
+  }
+
+  octree = voxelpicOcTreeNew(4, level_index);
   if (octree == NULL) {
     ret = VPIC_OUT_OF_MEMORY;
     goto error;
@@ -97,7 +54,7 @@ int main(int argc, char *argv[]) {
     goto error;
   }
 
-  voxelpicImage *image = voxelpicImageNew(width, height);
+  image = voxelpicImageNew(width, height);
   if (image == NULL) {
     ret = VPIC_OUT_OF_MEMORY;
     goto error;
@@ -109,7 +66,7 @@ int main(int argc, char *argv[]) {
     goto error;
   }
 
-  voxelpicLevel *output_level = voxelpicLevelNew(0);
+  output_level = voxelpicLevelNew(0);
 
   if (output_level == NULL) {
     ret = VPIC_OUT_OF_MEMORY;
@@ -122,7 +79,7 @@ int main(int argc, char *argv[]) {
     goto error;
   }
 
-  voxelpicPointCloud *actual = voxelpicPointCloudNew(0);
+  actual = voxelpicPointCloudNew(0);
 
   if (actual == NULL) {
     ret = VPIC_OUT_OF_MEMORY;

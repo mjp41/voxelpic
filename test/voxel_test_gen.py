@@ -37,7 +37,15 @@ Voxel = NamedTuple(
     "Voxel", [("index", Index), ("center", Vec), ("color", Color)])
 
 
-def generate_point_cloud(path: str, level: int, bounds: Bounds,
+def write_point_cloud(path: str, positions, colors):
+    with open(path, "wb") as file:
+        file.write(struct.pack(">i", len(positions)))
+        for position, color in zip(positions, colors):
+            file.write(struct.pack("fffBBB", *position, *color))
+
+
+def generate_point_cloud(input_path: str, expected_path: str, level: int,
+                         bounds: Bounds,
                          points_per_voxel=10):
     """Generate a random point cloud and save it to a binary file."""
     side = 2 ** level
@@ -75,18 +83,10 @@ def generate_point_cloud(path: str, level: int, bounds: Bounds,
 
     voxels.sort(key=lambda v: v.index)
 
-    with open(path, "wb") as file:
-        file.write(struct.pack(">ii", level, num_positions))
-        for i in index:
-            p = positions[i]
-            c = colors[i]
-            file.write(struct.pack("fffBBB", *p, *c))
-
-        file.write(struct.pack(">i", len(voxels)))
-        for v in voxels:
-            p = v.center
-            c = v.color
-            file.write(struct.pack("fffBBB", *p, *c))
+    write_point_cloud(input_path, [positions[i] for i in index],
+                      [colors[i] for i in index])
+    write_point_cloud(expected_path, [v.center for v in voxels],
+                      [v.color for v in voxels])
 
 
 if __name__ == "__main__":
@@ -101,10 +101,13 @@ if __name__ == "__main__":
         os.makedirs(args.output_dir)
 
     for level in range(1, args.max_depth + 1):
-        path = os.path.join(args.output_dir, f"voxel_{level}.dat")
-        if os.path.exists(path):
-            print(path, "exists, skipping")
+        input_path = os.path.join(args.output_dir,
+                                  f"voxel_{level}_input.dat")
+        expected_path = os.path.join(args.output_dir,
+                                     f"voxel_{level}_expected.dat")
+        if os.path.exists(input_path) and os.path.exists(expected_path):
+            print(input_path, "and", expected_path, "exist, skipping")
             continue
 
-        generate_point_cloud(path, level, Bounds(Vec(-1, -1, -1),
-                                                 Vec(1, 1, 1)))
+        generate_point_cloud(input_path, expected_path, level,
+                             Bounds(Vec(-1, -1, -1), Vec(1, 1, 1)))
