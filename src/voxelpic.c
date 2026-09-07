@@ -1238,6 +1238,10 @@ cleanup:
 }
 
 voxelpicEnum voxelpicLevelLoad(const char *path, voxelpicLevel *level_opaque) {
+  if (level_opaque == NULL) {
+    return VPIC_BAD_POINTER;
+  }
+
   FILE *fp = fopen(path, "rb");
   if (fp == NULL) {
     perror("Error opening level file for reading");
@@ -1245,11 +1249,6 @@ voxelpicEnum voxelpicLevelLoad(const char *path, voxelpicLevel *level_opaque) {
   }
 
   voxelpicEnum rc = VPIC_OK;
-
-  if (level_opaque == NULL) {
-    return VPIC_BAD_POINTER;
-  }
-
   Level *level = (Level *)level_opaque;
 
   uint32_t value;
@@ -1362,6 +1361,10 @@ cleanup:
 
 voxelpicEnum voxelpicPointCloudLoad(const char *path,
                                     voxelpicPointCloud *cloud) {
+  if (cloud == NULL) {
+    return VPIC_BAD_POINTER;
+  }
+
   FILE *fp = fopen(path, "rb");
   if (fp == NULL) {
     perror("Error opening cloud file for reading");
@@ -1369,10 +1372,6 @@ voxelpicEnum voxelpicPointCloudLoad(const char *path,
   }
 
   voxelpicEnum rc = VPIC_OK;
-
-  if (cloud == NULL) {
-    return VPIC_BAD_POINTER;
-  }
 
   uint32_t value;
   if (read_be(&value, fp) < 1) {
@@ -1389,7 +1388,8 @@ voxelpicEnum voxelpicPointCloudLoad(const char *path,
   if (size > cloud->capacity) {
     voxelpicEnum err = cloud_grow(cloud, size);
     if (err) {
-      return err;
+      rc = err;
+      goto cleanup;
     }
   }
 

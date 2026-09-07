@@ -409,6 +409,23 @@ end:
   return result;
 }
 
+static int test_load_rejects_bad_pointers(void) {
+  int result = 0;
+
+  voxelpicEnum rc = voxelpicLevelLoad("does_not_exist.dat", NULL);
+  if (rc != VPIC_BAD_POINTER) {
+    FAIL("LevelLoad NULL: expected VPIC_BAD_POINTER, got %d", rc);
+  }
+
+  rc = voxelpicPointCloudLoad("does_not_exist.dat", NULL);
+  if (rc != VPIC_BAD_POINTER) {
+    FAIL("PointCloudLoad NULL: expected VPIC_BAD_POINTER, got %d", rc);
+  }
+
+end:
+  return result;
+}
+
 int main(void) {
   struct {
     const char *name;
@@ -425,6 +442,7 @@ int main(void) {
        test_level_load_rejects_invalid_headers},
       {"cloud_load_rejects_invalid_count",
        test_cloud_load_rejects_invalid_count},
+      {"load_rejects_bad_pointers", test_load_rejects_bad_pointers},
   };
   size_t num_tests = sizeof(tests) / sizeof(tests[0]);
   int failures = 0;
