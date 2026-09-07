@@ -1155,14 +1155,14 @@ voxelpicEnum voxelpicLevelDecode(const voxelpicImage *image,
   return ret;
 }
 
-static int read_be(int_least32_t *value, FILE *fp) {
+static int read_be(uint32_t *value, FILE *fp) {
   uint8_t bytes[4];
   if (fread(bytes, sizeof(bytes[0]), 4, fp) < 4) {
     return -1;
   }
 
-  *value = (int_least32_t)((bytes[0] << 24) | (bytes[1] << 16) |
-                           (bytes[2] << 8) | (bytes[3]));
+  *value = ((uint32_t)bytes[0] << 24) | ((uint32_t)bytes[1] << 16) |
+           ((uint32_t)bytes[2] << 8) | (uint32_t)bytes[3];
   return 1;
 }
 
@@ -1252,17 +1252,27 @@ voxelpicEnum voxelpicLevelLoad(const char *path, voxelpicLevel *level_opaque) {
 
   Level *level = (Level *)level_opaque;
 
-  int_least32_t value;
+  uint32_t value;
 
   if (read_be(&value, fp) < 1) {
     goto file_error;
   }
 
+  if (value >= 32 || (UINT32_C(1) << value) > INT_LEAST16_MAX) {
+    rc = VPIC_INVALID_LEVEL;
+    goto cleanup;
+  }
+
   level->depth = (size_t)value;
-  level->side = 1 << level->depth;
+  level->side = (int_least16_t)(UINT32_C(1) << level->depth);
 
   if (read_be(&value, fp) < 1) {
     goto file_error;
+  }
+
+  if (value > INT32_MAX) {
+    rc = VPIC_IO_ERROR;
+    goto cleanup;
   }
 
   size_t size = (size_t)value;
@@ -1364,9 +1374,14 @@ voxelpicEnum voxelpicPointCloudLoad(const char *path,
     return VPIC_BAD_POINTER;
   }
 
-  int_least32_t value;
+  uint32_t value;
   if (read_be(&value, fp) < 1) {
     goto file_error;
+  }
+
+  if (value > INT32_MAX) {
+    rc = VPIC_IO_ERROR;
+    goto cleanup;
   }
 
   size_t size = (size_t)value;

@@ -338,6 +338,77 @@ end:
   return result;
 }
 
+static int write_test_file(const char *path, const unsigned char *data,
+                           size_t size) {
+  FILE *file = fopen(path, "wb");
+  if (file == NULL) {
+    return 1;
+  }
+
+  int result = fwrite(data, size, 1, file) != 1;
+  return fclose(file) != 0 || result;
+}
+
+static int test_level_load_rejects_invalid_headers(void) {
+  int result = 0;
+  const char *path = "invalid_level_header.dat";
+  voxelpicLevel *level = voxelpicLevelNew(0);
+  if (level == NULL) {
+    FAIL("LevelNew failed");
+  }
+
+  const unsigned char negative_size[] = {0, 0, 0, 7, 0xff, 0xff, 0xff, 0xff};
+  if (write_test_file(path, negative_size, sizeof(negative_size))) {
+    FAIL("Failed to write negative-size level file");
+  }
+
+  voxelpicEnum rc = voxelpicLevelLoad(path, level);
+  if (rc != VPIC_IO_ERROR) {
+    FAIL("LevelLoad negative size: expected VPIC_IO_ERROR, got %d", rc);
+  }
+
+  const unsigned char invalid_depth[] = {0, 0, 0, 15};
+  if (write_test_file(path, invalid_depth, sizeof(invalid_depth))) {
+    FAIL("Failed to write invalid-depth level file");
+  }
+
+  rc = voxelpicLevelLoad(path, level);
+  if (rc != VPIC_INVALID_LEVEL) {
+    FAIL("LevelLoad invalid depth: expected VPIC_INVALID_LEVEL, got %d", rc);
+  }
+
+end:
+  remove(path);
+  voxelpicLevelFree(level);
+  return result;
+}
+
+static int test_cloud_load_rejects_invalid_count(void) {
+  int result = 0;
+  const char *path = "invalid_cloud_header.dat";
+  const unsigned char negative_size[] = {0xff, 0xff, 0xff, 0xff};
+  if (write_test_file(path, negative_size, sizeof(negative_size))) {
+    FAIL("Failed to write negative-size cloud file");
+  }
+
+  voxelpicPointCloud *cloud = voxelpicPointCloudNew(0);
+  if (cloud == NULL) {
+    FAIL("PointCloudNew failed");
+  }
+
+  voxelpicEnum rc = voxelpicPointCloudLoad(path, cloud);
+  if (rc != VPIC_IO_ERROR) {
+    voxelpicPointCloudFree(cloud);
+    FAIL("PointCloudLoad negative size: expected VPIC_IO_ERROR, got %d", rc);
+  }
+
+  voxelpicPointCloudFree(cloud);
+
+end:
+  remove(path);
+  return result;
+}
+
 int main(void) {
   struct {
     const char *name;
@@ -350,6 +421,10 @@ int main(void) {
       {"depth_voxel_size", test_depth_voxel_size},
       {"error_strings", test_error_strings},
       {"level_to_cloud_truncate", test_level_to_cloud_truncate},
+      {"level_load_rejects_invalid_headers",
+       test_level_load_rejects_invalid_headers},
+      {"cloud_load_rejects_invalid_count",
+       test_cloud_load_rejects_invalid_count},
   };
   size_t num_tests = sizeof(tests) / sizeof(tests[0]);
   int failures = 0;
