@@ -198,6 +198,10 @@ static int compare_voxels(const void *lhs_opaque, const void *rhs_opaque) {
 }
 
 voxelpicEnum level_grow(Level *level, size_t new_capacity) {
+  if (new_capacity > SIZE_MAX / sizeof(Voxel)) {
+    return VPIC_OUT_OF_MEMORY;
+  }
+
   Voxel *voxels = malloc(new_capacity * sizeof(Voxel));
   if (voxels == NULL) {
     return VPIC_OUT_OF_MEMORY;
@@ -1028,7 +1032,11 @@ static inline voxelpicEnum level_append(Level *level, uint_least16_t i,
                                         Color color) {
   voxelpicEnum ret = VPIC_OK;
   if (level->size == level->capacity) {
-    ret = level_grow(level, level->capacity << 1);
+    size_t new_capacity = level->capacity == 0 ? 1 : level->capacity << 1;
+    if (new_capacity < level->capacity) {
+      return VPIC_OUT_OF_MEMORY;
+    }
+    ret = level_grow(level, new_capacity);
     if (ret) {
       return ret;
     }
@@ -1277,7 +1285,10 @@ voxelpicEnum voxelpicLevelLoad(const char *path, voxelpicLevel *level_opaque) {
   size_t size = (size_t)value;
 
   if (size > level->capacity) {
-    level_grow(level, size);
+    rc = level_grow(level, size);
+    if (rc) {
+      goto cleanup;
+    }
   }
 
   level->size = 0;
@@ -1293,7 +1304,10 @@ voxelpicEnum voxelpicLevelLoad(const char *path, voxelpicLevel *level_opaque) {
       goto file_error;
     }
 
-    level_append(level, pos[0], pos[1], pos[2], color);
+    rc = level_append(level, pos[0], pos[1], pos[2], color);
+    if (rc) {
+      goto cleanup;
+    }
   }
 
   goto cleanup;
